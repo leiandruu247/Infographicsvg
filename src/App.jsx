@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import ApiKeyInput from './components/ApiKeyInput';
+import ApiKeySetup from './components/ApiKeySetup';
 import PromptInput from './components/PromptInput';
 import ProcessingStatus from './components/ProcessingStatus';
 import PreviewDownload from './components/PreviewDownload';
-import { getApiKey } from './utils/localStorage';
+import { getApiKey, getElementProvider, getElementApiKey } from './utils/localStorage';
 import { generateInfographic, retryApiCall } from './services/geminiApi';
 import { analyzeAndRegenerateElements } from './services/imageAnalyzer';
 import { assembleSvg, createSvgPreview } from './services/svgAssembler';
@@ -28,9 +28,9 @@ function App() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  // Handle API key validation
-  const handleApiKeyValidated = (validatedKey) => {
-    setApiKey(validatedKey);
+  // Handle setup completion
+  const handleSetupComplete = () => {
+    setApiKey(getApiKey());
     setCurrentState(STATES.PROMPT_INPUT);
   };
 
@@ -68,10 +68,15 @@ function App() {
       );
 
       // Step 2: Analyze and regenerate elements
+      const elementProvider = getElementProvider();
+      const elementApiKey = getElementApiKey(elementProvider);
+
       const elementsResult = await analyzeAndRegenerateElements(
         apiKey,
         infographic.imageData,
         aspectRatio,
+        elementProvider,
+        elementApiKey,
         (status) => setProcessingStatus(status)
       );
 
@@ -127,7 +132,7 @@ function App() {
   return (
     <div className="App">
       {currentState === STATES.API_KEY_INPUT && (
-        <ApiKeyInput onApiKeyValidated={handleApiKeyValidated} />
+        <ApiKeySetup onSetupComplete={handleSetupComplete} />
       )}
 
       {currentState === STATES.PROMPT_INPUT && (

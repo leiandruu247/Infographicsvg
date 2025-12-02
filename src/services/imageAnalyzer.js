@@ -1,12 +1,15 @@
-import { analyzeInfographic, generateElement, retryApiCall } from './geminiApi.js';
+import { analyzeInfographic, retryApiCall } from './geminiApi.js';
+import { generateElementWithProvider } from './imageGenerationService.js';
 
 /**
  * Analyze infographic and regenerate all elements
  */
 export async function analyzeAndRegenerateElements(
-  apiKey,
+  geminiApiKey,
   imageData,
   aspectRatio,
+  elementProvider,
+  elementApiKey,
   onProgress
 ) {
   try {
@@ -14,7 +17,7 @@ export async function analyzeAndRegenerateElements(
     onProgress?.({ phase: 'analyzing', message: 'Analyzing infographic elements...' });
 
     const analysisResult = await retryApiCall(() =>
-      analyzeInfographic(apiKey, imageData)
+      analyzeInfographic(geminiApiKey, imageData)
     );
 
     const { elements, colorPalette } = analysisResult;
@@ -38,8 +41,9 @@ export async function analyzeAndRegenerateElements(
 
       try {
         const elementImage = await retryApiCall(() =>
-          generateElement(
-            apiKey,
+          generateElementWithProvider(
+            elementProvider,
+            elementApiKey,
             element.description,
             colorPalette,
             aspectRatio
