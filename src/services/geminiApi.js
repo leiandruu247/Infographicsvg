@@ -56,8 +56,7 @@ export async function generateInfographic(apiKey, prompt, width = 1376, height =
         generationConfig: {
           responseModalities: ['IMAGE', 'TEXT'],
           imageConfig: {
-            aspectRatio: aspectRatio.toString(),
-            resolution: 'high'
+            aspectRatio: aspectRatio.toString()
           }
         }
       })
@@ -208,8 +207,7 @@ CRITICAL REQUIREMENTS:
         generationConfig: {
           responseModalities: ['IMAGE'],
           imageConfig: {
-            aspectRatio: aspectRatio.toString(),
-            resolution: 'high'
+            aspectRatio: aspectRatio.toString()
           }
         }
       })
