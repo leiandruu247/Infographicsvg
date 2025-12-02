@@ -202,6 +202,7 @@ export default function PromptInput({ onGenerate, isGenerating }) {
                         </div>
                         <div className="flex items-center justify-between mt-2">
                           <p className="text-xs text-gray-500">
+                            {elementProvider === IMAGE_PROVIDERS.OPENAI && 'Get API key from platform.openai.com'}
                             {elementProvider === IMAGE_PROVIDERS.RECRAFT && 'Get API key from recraft.ai'}
                             {elementProvider === IMAGE_PROVIDERS.FIREFLY && 'Get API key from firefly.adobe.com'}
                             {elementProvider === IMAGE_PROVIDERS.IDEOGRAM && 'Get API key from ideogram.ai'}
