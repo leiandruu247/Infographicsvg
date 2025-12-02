@@ -1,9 +1,21 @@
 import { useState } from 'react';
 
+const ASPECT_RATIOS = [
+  { value: '1:1', label: '1:1 (Square)', description: 'Perfect for social media posts' },
+  { value: '16:9', label: '16:9 (Landscape)', description: 'Widescreen, presentations' },
+  { value: '9:16', label: '9:16 (Portrait)', description: 'Mobile stories, vertical content' },
+  { value: '4:3', label: '4:3 (Standard)', description: 'Classic screen ratio' },
+  { value: '3:4', label: '3:4 (Portrait)', description: 'Vertical print layouts' },
+  { value: '21:9', label: '21:9 (Ultra-wide)', description: 'Cinematic, banners' },
+  { value: '2:3', label: '2:3 (Portrait)', description: 'Photo prints' },
+  { value: '3:2', label: '3:2 (Landscape)', description: '35mm photo format' },
+  { value: '4:5', label: '4:5 (Portrait)', description: 'Instagram vertical' },
+  { value: '5:4', label: '5:4 (Landscape)', description: 'Computer displays' }
+];
+
 export default function PromptInput({ onGenerate, isGenerating }) {
   const [prompt, setPrompt] = useState('');
-  const [width, setWidth] = useState(1376);
-  const [height, setHeight] = useState(768);
+  const [aspectRatio, setAspectRatio] = useState('16:9');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleSubmit = () => {
@@ -13,8 +25,7 @@ export default function PromptInput({ onGenerate, isGenerating }) {
 
     onGenerate({
       prompt: prompt.trim(),
-      width: parseInt(width) || 1376,
-      height: parseInt(height) || 768
+      aspectRatio: aspectRatio
     });
   };
 
@@ -23,6 +34,8 @@ export default function PromptInput({ onGenerate, isGenerating }) {
       handleSubmit();
     }
   };
+
+  const selectedRatio = ASPECT_RATIOS.find(r => r.value === aspectRatio);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
@@ -63,41 +76,27 @@ export default function PromptInput({ onGenerate, isGenerating }) {
 
             {showAdvanced && (
               <div className="mt-4 p-4 bg-gray-50 rounded-lg space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="width" className="block text-sm font-medium text-gray-700 mb-2">
-                      Width (px)
-                    </label>
-                    <input
-                      id="width"
-                      type="number"
-                      value={width}
-                      onChange={(e) => setWidth(e.target.value)}
-                      min="256"
-                      max="4096"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                      disabled={isGenerating}
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="height" className="block text-sm font-medium text-gray-700 mb-2">
-                      Height (px)
-                    </label>
-                    <input
-                      id="height"
-                      type="number"
-                      value={height}
-                      onChange={(e) => setHeight(e.target.value)}
-                      min="256"
-                      max="4096"
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                      disabled={isGenerating}
-                    />
-                  </div>
+                <div>
+                  <label htmlFor="aspectRatio" className="block text-sm font-medium text-gray-700 mb-2">
+                    Aspect Ratio
+                  </label>
+                  <select
+                    id="aspectRatio"
+                    value={aspectRatio}
+                    onChange={(e) => setAspectRatio(e.target.value)}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white"
+                    disabled={isGenerating}
+                  >
+                    {ASPECT_RATIOS.map((ratio) => (
+                      <option key={ratio.value} value={ratio.value}>
+                        {ratio.label} - {ratio.description}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="text-xs text-gray-500 mt-2">
+                    {selectedRatio?.description}
+                  </p>
                 </div>
-                <p className="text-xs text-gray-500">
-                  Default: 1376x768 (16:9 ratio). Recommended range: 256-4096px
-                </p>
               </div>
             )}
           </div>

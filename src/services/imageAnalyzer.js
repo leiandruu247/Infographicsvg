@@ -6,8 +6,7 @@ import { analyzeInfographic, generateElement, retryApiCall } from './geminiApi.j
 export async function analyzeAndRegenerateElements(
   apiKey,
   imageData,
-  width,
-  height,
+  aspectRatio,
   onProgress
 ) {
   try {
@@ -43,8 +42,7 @@ export async function analyzeAndRegenerateElements(
             apiKey,
             element.description,
             colorPalette,
-            width,
-            height
+            aspectRatio
           )
         );
 

@@ -37,8 +37,7 @@ export async function validateApiKey(apiKey) {
 /**
  * Generate complete infographic image
  */
-export async function generateInfographic(apiKey, prompt, width = 1376, height = 768) {
-  const aspectRatio = width / height;
+export async function generateInfographic(apiKey, prompt, aspectRatio = '16:9') {
   const url = `${BASE_URL}/${IMAGE_MODEL}:generateContent?key=${apiKey}`;
 
   try {
@@ -56,7 +55,7 @@ export async function generateInfographic(apiKey, prompt, width = 1376, height =
         generationConfig: {
           responseModalities: ['IMAGE', 'TEXT'],
           imageConfig: {
-            aspectRatio: aspectRatio.toString()
+            aspectRatio: aspectRatio
           }
         }
       })
@@ -80,8 +79,7 @@ export async function generateInfographic(apiKey, prompt, width = 1376, height =
     return {
       imageData: imagePart.inlineData.data,
       mimeType: imagePart.inlineData.mimeType,
-      width,
-      height
+      aspectRatio
     };
   } catch (error) {
     console.error('Infographic generation failed:', error);
@@ -178,9 +176,8 @@ Return ONLY valid JSON (no markdown formatting) in this exact structure:
 /**
  * Generate a single element with transparent background
  */
-export async function generateElement(apiKey, elementDescription, colorPalette, width = 1376, height = 768) {
+export async function generateElement(apiKey, elementDescription, colorPalette, aspectRatio = '16:9') {
   const url = `${BASE_URL}/${IMAGE_MODEL}:generateContent?key=${apiKey}`;
-  const aspectRatio = width / height;
 
   const colorPaletteText = colorPalette && colorPalette.length > 0
     ? `\n\nUse ONLY these colors: ${colorPalette.join(', ')}`
@@ -207,7 +204,7 @@ CRITICAL REQUIREMENTS:
         generationConfig: {
           responseModalities: ['IMAGE'],
           imageConfig: {
-            aspectRatio: aspectRatio.toString()
+            aspectRatio: aspectRatio
           }
         }
       })

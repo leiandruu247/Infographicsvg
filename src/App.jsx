@@ -34,8 +34,25 @@ function App() {
     setCurrentState(STATES.PROMPT_INPUT);
   };
 
+  // Convert aspect ratio to dimensions
+  const getAspectRatioDimensions = (aspectRatio) => {
+    const ratioMap = {
+      '1:1': { width: 1024, height: 1024 },
+      '16:9': { width: 1376, height: 768 },
+      '9:16': { width: 768, height: 1376 },
+      '4:3': { width: 1024, height: 768 },
+      '3:4': { width: 768, height: 1024 },
+      '21:9': { width: 1680, height: 720 },
+      '2:3': { width: 682, height: 1024 },
+      '3:2': { width: 1024, height: 682 },
+      '4:5': { width: 819, height: 1024 },
+      '5:4': { width: 1024, height: 819 }
+    };
+    return ratioMap[aspectRatio] || { width: 1376, height: 768 };
+  };
+
   // Handle generation start
-  const handleGenerate = async ({ prompt, width, height }) => {
+  const handleGenerate = async ({ prompt, aspectRatio }) => {
     setCurrentState(STATES.PROCESSING);
     setError(null);
 
@@ -47,15 +64,14 @@ function App() {
       });
 
       const infographic = await retryApiCall(() =>
-        generateInfographic(apiKey, prompt, width, height)
+        generateInfographic(apiKey, prompt, aspectRatio)
       );
 
       // Step 2: Analyze and regenerate elements
       const elementsResult = await analyzeAndRegenerateElements(
         apiKey,
         infographic.imageData,
-        width,
-        height,
+        aspectRatio,
         (status) => setProcessingStatus(status)
       );
 
@@ -65,6 +81,8 @@ function App() {
         message: 'Assembling final SVG...'
       });
 
+      // Get dimensions for SVG assembly
+      const { width, height } = getAspectRatioDimensions(aspectRatio);
       const svgString = assembleSvg(elementsResult.elements, width, height);
 
       // Step 4: Create preview
