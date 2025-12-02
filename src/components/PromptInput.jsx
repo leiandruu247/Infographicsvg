@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { getElementProvider, getElementApiKey, saveElementProvider, saveElementApiKey } from '../utils/localStorage';
+import { IMAGE_PROVIDERS, getProviderName, getProviderDescription } from '../services/imageGenerationService';
 
 const ASPECT_RATIOS = [
   { value: '1:1', label: '1:1 (Square)', description: 'Perfect for social media posts' },
@@ -18,15 +20,58 @@ export default function PromptInput({ onGenerate, isGenerating }) {
   const [aspectRatio, setAspectRatio] = useState('16:9');
   const [showAdvanced, setShowAdvanced] = useState(false);
 
+  // Element generation provider settings
+  const [elementProvider, setElementProvider] = useState(getElementProvider());
+  const [elementApiKey, setElementApiKey] = useState('');
+  const [showElementKey, setShowElementKey] = useState(false);
+  const [providerSaveMessage, setProviderSaveMessage] = useState('');
+
+  useEffect(() => {
+    // Load API key for selected provider
+    const savedKey = getElementApiKey(elementProvider);
+    setElementApiKey(savedKey || '');
+  }, [elementProvider]);
+
   const handleSubmit = () => {
     if (!prompt.trim()) {
       return;
     }
 
+    // If using a non-Gemini provider and no API key, show error
+    if (elementProvider !== IMAGE_PROVIDERS.GEMINI && !elementApiKey.trim()) {
+      setProviderSaveMessage('Please enter an API key or switch to Gemini');
+      return;
+    }
+
+    // Save provider settings
+    if (elementApiKey.trim()) {
+      saveElementApiKey(elementProvider, elementApiKey.trim());
+    }
+    saveElementProvider(elementProvider);
+
     onGenerate({
       prompt: prompt.trim(),
       aspectRatio: aspectRatio
     });
+  };
+
+  const handleProviderChange = (provider) => {
+    setElementProvider(provider);
+    setProviderSaveMessage('');
+  };
+
+  const handleSaveProviderSettings = () => {
+    if (elementProvider !== IMAGE_PROVIDERS.GEMINI && !elementApiKey.trim()) {
+      setProviderSaveMessage('Please enter an API key');
+      return;
+    }
+
+    saveElementProvider(elementProvider);
+    if (elementApiKey.trim()) {
+      saveElementApiKey(elementProvider, elementApiKey.trim());
+    }
+    setProviderSaveMessage('Settings saved!');
+    setTimeout(() => setProviderSaveMessage(''), 2000);
   };
 
   const handleKeyPress = (e) => {
@@ -96,6 +141,102 @@ export default function PromptInput({ onGenerate, isGenerating }) {
                   <p className="text-xs text-gray-500 mt-2">
                     {selectedRatio?.description}
                   </p>
+                </div>
+
+                <div className="border-t border-gray-200 pt-4">
+                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Element Generation Model</h3>
+                  <p className="text-xs text-gray-600 mb-3">
+                    Choose which AI model to use for generating transparent elements. Gemini works but may have transparency issues.
+                    Other models are optimized for transparent backgrounds.
+                  </p>
+
+                  <div className="space-y-3">
+                    <div>
+                      <label htmlFor="elementProvider" className="block text-sm font-medium text-gray-700 mb-2">
+                        Model Provider
+                      </label>
+                      <select
+                        id="elementProvider"
+                        value={elementProvider}
+                        onChange={(e) => handleProviderChange(e.target.value)}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none bg-white"
+                        disabled={isGenerating}
+                      >
+                        {Object.values(IMAGE_PROVIDERS).map((provider) => (
+                          <option key={provider} value={provider}>
+                            {getProviderName(provider)}
+                          </option>
+                        ))}
+                      </select>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {getProviderDescription(elementProvider)}
+                      </p>
+                    </div>
+
+                    {elementProvider !== IMAGE_PROVIDERS.GEMINI && (
+                      <div>
+                        <label htmlFor="elementApiKey" className="block text-sm font-medium text-gray-700 mb-2">
+                          {getProviderName(elementProvider)} API Key
+                        </label>
+                        <div className="relative">
+                          <input
+                            id="elementApiKey"
+                            type={showElementKey ? 'text' : 'password'}
+                            value={elementApiKey}
+                            onChange={(e) => {
+                              setElementApiKey(e.target.value);
+                              setProviderSaveMessage('');
+                            }}
+                            placeholder={`Enter your ${getProviderName(elementProvider)} API key`}
+                            className="w-full px-4 py-2 pr-12 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                            disabled={isGenerating}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowElementKey(!showElementKey)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            disabled={isGenerating}
+                          >
+                            {showElementKey ? '👁️' : '👁️‍🗨️'}
+                          </button>
+                        </div>
+                        <div className="flex items-center justify-between mt-2">
+                          <p className="text-xs text-gray-500">
+                            {elementProvider === IMAGE_PROVIDERS.RECRAFT && 'Get API key from recraft.ai'}
+                            {elementProvider === IMAGE_PROVIDERS.FIREFLY && 'Get API key from firefly.adobe.com'}
+                            {elementProvider === IMAGE_PROVIDERS.IDEOGRAM && 'Get API key from ideogram.ai'}
+                          </p>
+                          <button
+                            type="button"
+                            onClick={handleSaveProviderSettings}
+                            className="text-xs text-blue-600 hover:text-blue-700 font-medium"
+                            disabled={isGenerating}
+                          >
+                            Save Settings
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {elementProvider === IMAGE_PROVIDERS.GEMINI && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                        <p className="text-xs text-gray-700">
+                          Using Gemini for element generation. This uses your existing Gemini API key.
+                          Note: Transparency support may be limited.
+                        </p>
+                      </div>
+                    )}
+
+                    {providerSaveMessage && (
+                      <div className={`text-xs p-2 rounded ${
+                        providerSaveMessage.includes('saved') || providerSaveMessage.includes('Settings')
+                          ? 'bg-green-50 text-green-700'
+                          : 'bg-red-50 text-red-700'
+                      }`}>
+                        {providerSaveMessage}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
